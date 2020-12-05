@@ -1,0 +1,14 @@
+bin
+.vscode
+obj
+*.db
+.history
+# Config
+# Config/*
+# appsettings.json
+.vs
+# appsettings.json
+Library
+credentials.json
+logs
+logs/*
