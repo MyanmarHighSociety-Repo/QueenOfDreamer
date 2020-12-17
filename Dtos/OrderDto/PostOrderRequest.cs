@@ -45,7 +45,8 @@ namespace QueenOfDreamer.API.Dtos.OrderDto
         public string FromTime { get; set; }
 
         public string ToTime { get; set; } 
-        public SelectedDeliveryInfo SelectedDeliveryInfo {get;set;}
+        public int DeliveryServiceId { get; set; } 
+        //public SelectedDeliveryInfo SelectedDeliveryInfo {get;set;}
     }
     public class SelectedDeliveryInfo {
         public int DeliveryServiceId { get; set; }   

@@ -1123,18 +1123,12 @@ namespace QueenOfDreamer.API.Repos
                 // await _memberPointRepo.ReceivedMemberPoint(recPMReq,token);
 
                     #endregion
-                
-                    #region Delivery Info
+                #region Delivery Info
                     var orderDeliveryInfoToAdd = new OrderDeliveryInfo
                     {
                         OrderId = orderToAdd.Id,
                         Name =isZawgyi?Rabbit.Zg2Uni(req.DeliveryInfo.Name):req.DeliveryInfo.Name,
-                        DeliveryServiceId = req.DeliveryInfo.SelectedDeliveryInfo.DeliveryServiceId,
-                        DeliveryServiceName = req.DeliveryInfo.SelectedDeliveryInfo.DeliveryServiceName,
-                        DeliveryServiceEmail = req.DeliveryInfo.SelectedDeliveryInfo.DeliveryServiceEmail,
-                        DeliveryServicePhno = req.DeliveryInfo.SelectedDeliveryInfo.DeliveryServicePhno,
-                        LogoPath = req.DeliveryInfo.SelectedDeliveryInfo.LogoPath,
-                        DeliveryFee = req.DeliveryInfo.SelectedDeliveryInfo.DeliveryFee,
+                        DeliveryServiceId = req.DeliveryInfo.DeliveryServiceId,
                         Address =isZawgyi?Rabbit.Zg2Uni(req.DeliveryInfo.Address):req.DeliveryInfo.Address,
                         PhNo = req.DeliveryInfo.PhoNo,
                         Remark =isZawgyi?Rabbit.Zg2Uni(req.DeliveryInfo.Remark):req.DeliveryInfo.Remark,
