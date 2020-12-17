@@ -176,7 +176,7 @@ namespace QueenOfDreamer.API.Repos
             }
         }
 
-        public async Task<GetCartDetailResponse> GetCartDetail(int userId, string token)
+        public async Task<GetCartDetailResponse> GetCartDetail_Old(int userId, string token)
         {
             bool isZawgyi=Rabbit.IsZawgyi(_httpContextAccessor);
 
@@ -434,6 +434,243 @@ namespace QueenOfDreamer.API.Repos
 
             }
            
+            return response;
+           
+        }
+    
+         public async Task<GetCartDetailResponse> GetCartDetail(int userId, string token)
+        {
+            bool isZawgyi=Rabbit.IsZawgyi(_httpContextAccessor);
+
+            var response = new GetCartDetailResponse(){
+                StatusCode=StatusCodes.Status200OK
+            };
+
+            #region  Product info
+
+             var itemFromCart = await _context.TrnCart.Where(x => x.UserId == userId)
+                .Select(s => new GetCartDetailProductInfo
+                {
+                    ProductId = s.ProductId,
+                    SkuId = s.SkuId,
+                    Price=_context.ProductSku.Where(x => x.ProductId == s.ProductId && x.SkuId==s.SkuId)
+                         .Select(x => x.Price).FirstOrDefault(),
+                    // Price = _context.ProductPrice.Where(x => x.ProductId == s.ProductId)
+                    //         .Select(s => s.Price).FirstOrDefault(),
+                    ProductUrl = _context.ProductImage.Where(x => x.ProductId == s.ProductId && x.isMain == true)
+                            .Select(s => s.Url).FirstOrDefault(),
+                    Qty = s.Qty,
+                    Name = _context.Product.Where(x => x.Id == s.ProductId).Select(s =>isZawgyi?Rabbit.Uni2Zg(s.Name):s.Name)
+                            .FirstOrDefault(),
+                    Variation = null,
+                    AvailableQty = _context.ProductSku.Where(x => x.ProductId == s.ProductId &&
+                          x.SkuId == s.SkuId).Select(s => s.Qty).FirstOrDefault(),
+                    PromotePrice=_context.ProductPromotion.Where(x=>x.ProductId==s.ProductId).Select(x=>x.TotalAmt).FirstOrDefault()
+                }).ToListAsync();
+
+            foreach (var item in itemFromCart)
+            {
+                var skuValue = await (from psku in _context.ProductSkuValue
+                                      from pvopt in _context.ProductVariantOption
+                                      where psku.ProductId == item.ProductId
+                                      && psku.SkuId == item.SkuId
+                                      && psku.ProductId == pvopt.ProductId
+                                      && psku.VariantId == pvopt.VariantId
+                                      && psku.ValueId == pvopt.ValueId
+                                      select isZawgyi?Rabbit.Uni2Zg(pvopt.ValueName):pvopt.ValueName).ToListAsync();
+
+                item.Variation = string.Join(",", skuValue);
+
+                #region GetPromotion
+                var productPromote=_context.ProductPromotion.Where(x=>x.ProductId==item.ProductId).FirstOrDefault();
+                
+                double promotePrice=0;
+                if(productPromote!=null && productPromote.Percent>0)
+                {
+                    double discountPrice= double.Parse((((double)productPromote.Percent/(double)100)*(double)item.Price).ToString("0.00"));
+                    promotePrice=item.Price-discountPrice;
+                }
+                item.PromotePrice=promotePrice;
+                
+                #endregion
+
+            }
+
+            response.ProductInfo = itemFromCart;
+
+            #endregion
+           
+            #region  Payment info
+             response.PaymentService = await _context.PaymentService.Where(x => x.Id != QueenOfDreamerConst.PAYMENT_SERVICE_COD && x.IsActive == true)
+                                    .Select(s => new GetCartDetailPaymentService
+                                    {
+                                        Id = s.Id,
+                                        ImgUrl = s.ImgPath,
+                                        Name =isZawgyi?Rabbit.Uni2Zg(s.Name):s.Name
+                                    }).ToListAsync();                    
+            
+            response.NewPaymentService=await _miscellaneousRepo.GetPaymentServiceForBuyer();
+
+            #endregion
+
+            #region  Delivery info
+
+            var userInfo = await _userServices.GetUserInfo(userId, token);
+            
+            var trnCartDeliInfo = await _context.TrnCartDeliveryInfo.Where(x => x.UserId == userId).FirstOrDefaultAsync();
+            if (trnCartDeliInfo != null)
+            {
+                string cityName=await _deliServices.GetCityName(token,trnCartDeliInfo.CityId);
+                string townshipName=await _deliServices.GetTownshipName(token,trnCartDeliInfo.TownshipId);
+                
+                cityName=isZawgyi?Rabbit.Uni2Zg(cityName):cityName;
+                townshipName=isZawgyi?Rabbit.Uni2Zg(townshipName):townshipName;
+
+                // var latestCartInfoUpdatedDate = await _context.TrnCart
+                //                                 .Where(x => x.UserId == userId)
+                //                                 .OrderByDescending(o => o.CreatedDate)
+                //                                 .Select(s => s.CreatedDate)
+                //                                 .FirstOrDefaultAsync();
+                
+                // if(userInfo.UpdatedDate != null && userInfo.UpdatedDate > latestCartInfoUpdatedDate)
+                if(userInfo.UpdatedDate != null && userInfo.UpdatedDate > trnCartDeliInfo.UpdatedDate)
+                {
+                    trnCartDeliInfo.Name = userInfo.Name;
+                    trnCartDeliInfo.Address = userInfo.Address==null?" ":userInfo.Address;
+                    trnCartDeliInfo.PhNo = userInfo.PhoneNo;
+                    trnCartDeliInfo.TownshipId = userInfo.TownshipId;
+                    trnCartDeliInfo.CityId = userInfo.CityId;
+                    await _context.SaveChangesAsync();
+                }
+
+                GetCartDetailDeliveryInfo cartDetailDeliveryInfo = new GetCartDetailDeliveryInfo();
+                cartDetailDeliveryInfo.UserId = trnCartDeliInfo.UserId;
+                cartDetailDeliveryInfo.CityId = trnCartDeliInfo.CityId;
+                cartDetailDeliveryInfo.TownshipId = trnCartDeliInfo.TownshipId;
+                cartDetailDeliveryInfo.AreaInfo = townshipName + " ၊ " +cityName;
+                cartDetailDeliveryInfo.Address = trnCartDeliInfo.Address==null?" ":(isZawgyi?Rabbit.Uni2Zg(trnCartDeliInfo.Address):trnCartDeliInfo.Address);
+                cartDetailDeliveryInfo.DeliveryAmt = trnCartDeliInfo.DeliveryAmt;
+                cartDetailDeliveryInfo.DeliveryServiceId = trnCartDeliInfo.DeliveryServiceId;
+                cartDetailDeliveryInfo.FromEstDeliveryDay = trnCartDeliInfo.FromEstDeliveryDay;
+                cartDetailDeliveryInfo.ToEstDeliveryDay = trnCartDeliInfo.ToEstDeliveryDay;
+                cartDetailDeliveryInfo.CityName = cityName;
+                cartDetailDeliveryInfo.TownshipName = townshipName;
+                cartDetailDeliveryInfo.Name =isZawgyi?Rabbit.Uni2Zg(trnCartDeliInfo.Name):trnCartDeliInfo.Name;
+                cartDetailDeliveryInfo.PhoNo = trnCartDeliInfo.PhNo;
+                cartDetailDeliveryInfo.Remark =isZawgyi?Rabbit.Uni2Zg(trnCartDeliInfo.Remark): trnCartDeliInfo.Remark;
+                if (trnCartDeliInfo.DeliveryDate != DateTime.MinValue)
+                {
+                    cartDetailDeliveryInfo.DeliveryDate = trnCartDeliInfo.DeliveryDate.Date.ToString("yyyy-MM-dd") + "(" + trnCartDeliInfo.DeliveryFromTime + " - " + trnCartDeliInfo.DeliveryToTime + ")";
+                }
+                else
+                {
+                    cartDetailDeliveryInfo.DeliveryDate = String.Empty;
+                }
+                cartDetailDeliveryInfo.DeliveryFromTime = trnCartDeliInfo.DeliveryFromTime;
+                cartDetailDeliveryInfo.DeliveryToTime = trnCartDeliInfo.DeliveryToTime;
+                response.DeliveryInfo = cartDetailDeliveryInfo;
+               
+            }
+            else
+            {
+
+                string cityName=await _deliServices.GetCityName(token,userInfo.CityId);
+                string townshipName=await _deliServices.GetTownshipName(token,userInfo.TownshipId);
+
+                cityName=isZawgyi?Rabbit.Uni2Zg(cityName):cityName;
+                townshipName=isZawgyi?Rabbit.Uni2Zg(townshipName):townshipName;
+
+                #region GetDeliveryServiceRate
+                var deliveryRate= await _deliServices.GetDeliveryServiceRate(QueenOfDreamerConst.CUSTOM_DELIVERY_SERVICE_ID,
+                                int.Parse(userInfo.CityId.ToString()),
+                                int.Parse(userInfo.TownshipId.ToString()),
+                                token);               
+                #endregion
+
+                var deliveryInfo= new GetCartDetailDeliveryInfo()
+                {
+                    CityId = userInfo.CityId,
+                    TownshipId = userInfo.TownshipId,
+                    AreaInfo =  townshipName + " ၊ " +cityName,
+                    CityName =  cityName,
+                    TownshipName =  townshipName,
+                    Address = String.IsNullOrEmpty(userInfo.Address)?" ":(isZawgyi?Rabbit.Uni2Zg(userInfo.Address):userInfo.Address),
+                    DeliveryAmt = deliveryRate.ServiceAmount,
+                    DeliveryServiceId = QueenOfDreamerConst.CUSTOM_DELIVERY_SERVICE_ID,
+                    FromEstDeliveryDay = deliveryRate.FromEstDeliveryDay,
+                    ToEstDeliveryDay = deliveryRate.ToEstDeliveryDay,
+                    UserId = userId,
+                    Name = userInfo.Name,
+                    PhoNo = userInfo.PhoneNo,
+                    Remark = String.Empty,
+                    DeliveryDate = DateTime.Now.Date.AddDays(deliveryRate.ToEstDeliveryDay).ToString("yyyy-MM-dd") + "(3PM - 5PM)",
+                    DeliveryFromTime = String.Empty,
+                    DeliveryToTime = String.Empty,
+                };
+                response.DeliveryInfo = deliveryInfo;
+                }
+
+
+            #endregion
+            
+            #region  Total amount info
+            foreach (var item in response.ProductInfo)
+                    {
+                        if(item.PromotePrice>0)
+                        {
+                            response.TotalAmt += item.PromotePrice * item.Qty;
+                        }
+                        else{
+                            response.TotalAmt += item.Price * item.Qty;
+                        }
+                        
+                    }
+                    response.DeliveryFee=response.DeliveryInfo.DeliveryAmt;
+                    response.NetAmt = response.TotalAmt + response.DeliveryInfo.DeliveryAmt;
+            #endregion
+
+            #region Check qty before order
+
+            var issueList=new List<ProductIssues>();
+            foreach (var item in response.ProductInfo)
+            {
+                var product=await _context.Product.Where(x=>x.Id==item.ProductId).SingleOrDefaultAsync();
+                var skuProductQty = await _context.ProductSku.Where(x => x.ProductId == item.ProductId && x.SkuId == item.SkuId).FirstOrDefaultAsync();
+                if(!product.IsActive)
+                {
+                        var issue=new ProductIssues(){
+                            ProductId=item.ProductId,
+                            SkuId=item.SkuId,
+                            ProductName=isZawgyi?Rabbit.Uni2Zg(product.Name):product.Name,
+                            Action="Delete",
+                            Qty=skuProductQty.Qty,
+                            Reason=string.Format("Your order item - {0} has been deleted by seller.",product.Name)
+                        };
+                        issueList.Add(issue);
+                }
+                
+                else if (skuProductQty != null)
+                {
+                    if(item.Qty>skuProductQty.Qty){//Check if add to cart qty > stock qty. Can't make order
+                        
+                        var issue=new ProductIssues(){
+                            ProductId=item.ProductId,
+                            SkuId=item.SkuId,
+                            ProductName=isZawgyi?Rabbit.Uni2Zg(product.Name):product.Name,
+                                Action="OutOfStock",
+                            Qty=skuProductQty.Qty,
+                            Reason=string.Format("You'er order {0} of {1}, but we only have {2} left.",(item.Qty>1?item.Qty+" quantities" : item.Qty+" quantity" ),(product.Name),(skuProductQty.Qty>1?skuProductQty.Qty+" quantities" : skuProductQty.Qty+" quantity" ))
+                        };
+                        issueList.Add(issue);                                
+                    }            
+                }                         
+            }
+            if(issueList.Count()>0)
+            {              
+                response.ProductIssues=issueList;
+            }  
+            #endregion
+
             return response;
            
         }

@@ -42,7 +42,7 @@ namespace QueenOfDreamer.API.Dtos.OrderDto
 
     public class GetCartDetailDeliveryInfo
     {
-        // public int DeliveryServiceId { get; set; }
+        public int DeliveryServiceId { get; set; }
 
         public int CityId { get; set; }
 
@@ -54,9 +54,9 @@ namespace QueenOfDreamer.API.Dtos.OrderDto
 
         public string AreaInfo { get; set; }
 
-        // public int FromEstDeliveryDay { get; set; }
+        public int FromEstDeliveryDay { get; set; }
 
-        // public int ToEstDeliveryDay { get; set; }
+        public int ToEstDeliveryDay { get; set; }
 
         public double DeliveryAmt { get; set; }
 
@@ -74,11 +74,11 @@ namespace QueenOfDreamer.API.Dtos.OrderDto
 
         public List<GetOtherCityDeliveryServiceRateResponse> OtherOptionService {get;set;}
 
-        // public string DeliveryDate { get; set; }
+        public string DeliveryDate { get; set; }
 
-        // public string DeliveryFromTime { get; set; }
+        public string DeliveryFromTime { get; set; }
 
-        // public string DeliveryToTime { get; set; }
+        public string DeliveryToTime { get; set; }
 
     }
 
