@@ -686,7 +686,9 @@ namespace QueenOfDreamer.API.Repos
                 }
                 catch (Exception e)
                 {
-                    log.Error(e.Message);
+                    var linenum = Convert.ToInt32(e.StackTrace.Substring(e.StackTrace.LastIndexOf(' ')));
+                    log.Error(string.Format($"Error message=> {e.Message} at line no {linenum}, inner exception => {e.InnerException.Message}"));
+
                     transaction.Rollback();
                     return new ResponseStatus{
                         StatusCode=StatusCodes.Status500InternalServerError,
