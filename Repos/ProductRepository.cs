@@ -449,7 +449,7 @@ namespace QueenOfDreamer.API.Repos
                         Name =isZawgyi?Rabbit.Zg2Uni(req.Name):req.Name,
                         IsActive = true,
                         ProductTypeId=req.ProductTypeId,
-                        BrandId=req.BrandId,
+                        BrandId=req.BrandId==0?null:req.BrandId,
                         ProductStatus=req.ProductStatus,
                         CreatedDate=DateTime.Now,
                         CreatedBy = currentLoginID,

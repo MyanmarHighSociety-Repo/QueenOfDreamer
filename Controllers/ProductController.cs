@@ -102,8 +102,10 @@ namespace QueenOfDreamer.API.Controllers
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
-               return StatusCode(StatusCodes.Status500InternalServerError,e.Message);
+                var linenum = Convert.ToInt32(e.StackTrace.Substring(e.StackTrace.LastIndexOf(' ')));
+                log.Error(string.Format($"Error message=> {e.Message} at line no {linenum}, inner exception => {e.InnerException.Message}"));
+
+                return StatusCode(StatusCodes.Status500InternalServerError,e.Message);
             }
         }
 
