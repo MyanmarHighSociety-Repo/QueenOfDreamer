@@ -584,7 +584,12 @@ namespace QueenOfDreamer.API.Repos
                 var deliveryRate= await _deliServices.GetDeliveryServiceRate(QueenOfDreamerConst.CUSTOM_DELIVERY_SERVICE_ID,
                                 int.Parse(userInfo.CityId.ToString()),
                                 int.Parse(userInfo.TownshipId.ToString()),
-                                token);               
+                                token); 
+                //this is hard code
+                if(deliveryRate != null)
+                {
+                    deliveryRate.ServiceAmount = 1000;
+                }
                 #endregion
 
                 var deliveryInfo= new GetCartDetailDeliveryInfo()
@@ -634,36 +639,47 @@ namespace QueenOfDreamer.API.Repos
             var issueList=new List<ProductIssues>();
             foreach (var item in response.ProductInfo)
             {
-                var product=await _context.Product.Where(x=>x.Id==item.ProductId).SingleOrDefaultAsync();
-                var skuProductQty = await _context.ProductSku.Where(x => x.ProductId == item.ProductId && x.SkuId == item.SkuId).FirstOrDefaultAsync();
-                if(!product.IsActive)
+                try
                 {
-                        var issue=new ProductIssues(){
-                            ProductId=item.ProductId,
-                            SkuId=item.SkuId,
-                            ProductName=isZawgyi?Rabbit.Uni2Zg(product.Name):product.Name,
-                            Action="Delete",
-                            Qty=skuProductQty.Qty,
-                            Reason=string.Format("Your order item - {0} has been deleted by seller.",product.Name)
+                    var product = await _context.Product.Where(x => x.Id == item.ProductId).SingleOrDefaultAsync();
+                    var skuProductQty = await _context.ProductSku.Where(x => x.ProductId == item.ProductId && x.SkuId == item.SkuId).FirstOrDefaultAsync();
+                    if (!product.IsActive)
+                    {
+                        var issue = new ProductIssues()
+                        {
+                            ProductId = item.ProductId,
+                            SkuId = item.SkuId,
+                            ProductName = isZawgyi ? Rabbit.Uni2Zg(product.Name) : product.Name,
+                            Action = "Delete",
+                            Qty = skuProductQty.Qty,
+                            Reason = string.Format("Your order item - {0} has been deleted by seller.", product.Name)
                         };
                         issueList.Add(issue);
+                    }
+
+                    else if (skuProductQty != null)
+                    {
+                        if (item.Qty > skuProductQty.Qty)
+                        {//Check if add to cart qty > stock qty. Can't make order
+
+                            var issue = new ProductIssues()
+                            {
+                                ProductId = item.ProductId,
+                                SkuId = item.SkuId,
+                                ProductName = isZawgyi ? Rabbit.Uni2Zg(product.Name) : product.Name,
+                                Action = "OutOfStock",
+                                Qty = skuProductQty.Qty,
+                                Reason = string.Format("You'er order {0} of {1}, but we only have {2} left.", (item.Qty > 1 ? item.Qty + " quantities" : item.Qty + " quantity"), (product.Name), (skuProductQty.Qty > 1 ? skuProductQty.Qty + " quantities" : skuProductQty.Qty + " quantity"))
+                            };
+                            issueList.Add(issue);
+                        }
+                    }
                 }
-                
-                else if (skuProductQty != null)
+                catch (Exception ex)
                 {
-                    if(item.Qty>skuProductQty.Qty){//Check if add to cart qty > stock qty. Can't make order
-                        
-                        var issue=new ProductIssues(){
-                            ProductId=item.ProductId,
-                            SkuId=item.SkuId,
-                            ProductName=isZawgyi?Rabbit.Uni2Zg(product.Name):product.Name,
-                                Action="OutOfStock",
-                            Qty=skuProductQty.Qty,
-                            Reason=string.Format("You'er order {0} of {1}, but we only have {2} left.",(item.Qty>1?item.Qty+" quantities" : item.Qty+" quantity" ),(product.Name),(skuProductQty.Qty>1?skuProductQty.Qty+" quantities" : skuProductQty.Qty+" quantity" ))
-                        };
-                        issueList.Add(issue);                                
-                    }            
-                }                         
+
+                }
+                                   
             }
             if(issueList.Count()>0)
             {              
