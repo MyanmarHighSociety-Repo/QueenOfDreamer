@@ -3262,8 +3262,9 @@ namespace QueenOfDreamer.API.Repos
                     OriginalPrice = itm.OriginalPrice,
                     // PromotePrice=_context.ProductPromotion.Where(p => p.ProductId == itm.ProductId).Select(p => p.TotalAmt).FirstOrDefault(),
                     // PromotePercent=_context.ProductPromotion.Where(p => p.ProductId == itm.ProductId).Select(p => p.Percent).FirstOrDefault(),
-                    PromotePrice=itm.Price,
-                    PromotePercent=itm.PromotePercent,
+                    //PromotePrice = itm.Price,
+                    PromotePrice = itm.Price == itm.OriginalPrice ? 0 : itm.Price,
+                    PromotePercent =itm.PromotePercent,
                     
                 }).ToListAsync();
 
