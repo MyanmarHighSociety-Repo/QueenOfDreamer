@@ -1329,39 +1329,39 @@ namespace QueenOfDreamer.API.Repos
                     #endregion
 
                     #region  MemberPoint
-                    var orderDetail=await _context.OrderDetail
-                    .Where(x=>x.OrderId==orderId)
-                    .ToListAsync();
+                    //var orderDetail=await _context.OrderDetail
+                    //.Where(x=>x.OrderId==orderId)
+                    //.ToListAsync();
 
-                    List<ReceivedMemberPointProductCategory> cateListPM=new List<ReceivedMemberPointProductCategory>();
+                    //List<ReceivedMemberPointProductCategory> cateListPM=new List<ReceivedMemberPointProductCategory>();
 
-                    foreach (var item in orderDetail)
-                    {
-                        var cID=await _context.Product.Where(x=>x.Id==item.ProductId).Select(x=>x.ProductCategoryId).SingleOrDefaultAsync();
+                    //foreach (var item in orderDetail)
+                    //{
+                    //    var cID=await _context.Product.Where(x=>x.Id==item.ProductId).Select(x=>x.ProductCategoryId).SingleOrDefaultAsync();
                         
-                        var catePM= cateListPM.Where(x=>x.ProductCategoryId==cID).SingleOrDefault();
+                    //    var catePM= cateListPM.Where(x=>x.ProductCategoryId==cID).SingleOrDefault();
 
-                        if(catePM==null)
-                        {
-                            var newCatePM=new ReceivedMemberPointProductCategory(){
-                                ProductCategoryId=cID,
-                                TotalAmount=item.Price * item.Qty
-                            };
-                            cateListPM.Add(newCatePM);
-                        }
-                        else{
-                            catePM.TotalAmount+=item.Price * item.Qty;
-                        }                       
-                    }
+                    //    if(catePM==null)
+                    //    {
+                    //        var newCatePM=new ReceivedMemberPointProductCategory(){
+                    //            ProductCategoryId=cID,
+                    //            TotalAmount=item.Price * item.Qty
+                    //        };
+                    //        cateListPM.Add(newCatePM);
+                    //    }
+                    //    else{
+                    //        catePM.TotalAmount+=item.Price * item.Qty;
+                    //    }                       
+                    //}
 
-                    ReceivedMemberPointRequest recPMReq=new ReceivedMemberPointRequest(){
-                    UserId=userId,
-                    VoucherNo=order.VoucherNo,
-                    ProductCategory=cateListPM,
-                    ApplicationConfigId=QueenOfDreamerConst.APPLICATION_CONFIG_ID
-                    };
+                    //ReceivedMemberPointRequest recPMReq=new ReceivedMemberPointRequest(){
+                    //UserId=userId,
+                    //VoucherNo=order.VoucherNo,
+                    //ProductCategory=cateListPM,
+                    //ApplicationConfigId=QueenOfDreamerConst.APPLICATION_CONFIG_ID
+                    //};
 
-                    await _memberPointRepo.ReceivedMemberPoint(recPMReq,token);
+                    //await _memberPointRepo.ReceivedMemberPoint(recPMReq,token);
                     #endregion
                    
                     #region Noti
@@ -2024,11 +2024,11 @@ namespace QueenOfDreamer.API.Repos
             return null;
         }
 
-        public async Task<ResponseStatus> UpdateOrderStatus(UpdateOrderStatusRequest request, int currentUserLogin,int platform)
+        public async Task<ResponseStatus> UpdateOrderStatus(UpdateOrderStatusRequest request, int currentUserLogin,int platform, string token)
         {
             ResponseStatus response = new ResponseStatus();
-            Order orderDetail = await _context.Order.Where(x => x.Id == request.OrderId).FirstOrDefaultAsync();
-            if (orderDetail == null)
+            Order objOrder = await _context.Order.Where(x => x.Id == request.OrderId).FirstOrDefaultAsync();
+            if (objOrder == null)
             {
                 response.StatusCode = StatusCodes.Status401Unauthorized;
                 response.Message = "Invalid order Id.";
@@ -2036,16 +2036,16 @@ namespace QueenOfDreamer.API.Repos
             }
             else
             {
-                if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE)
+                if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_TAKE; //ထုတ်ပိုးပြီး
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_TAKE; //ထုတ်ပိုးပြီး
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_TAKE.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_TAKE.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2059,8 +2059,8 @@ namespace QueenOfDreamer.API.Repos
                     }
                     #endregion
 
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
                     try
                     {
                         await _context.SaveChangesAsync();
@@ -2086,7 +2086,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             notiTemplateBuyer.Title,
                                                                             bodyBuyers, userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);  // true for sending noti to seller
 
                         response.Message = "ထုပ်ပိုးပြီးအဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";
@@ -2100,18 +2100,18 @@ namespace QueenOfDreamer.API.Repos
                         return response;
                     }
                 }
-                else if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING)
+                else if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENDING; //ပို့နေသည်
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENDING; //ပို့နေသည်
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_SENDING.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_SENDING.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2149,7 +2149,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             bodyBuyers, 
                                                                             userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);  // true for sending noti to seller
 
                         response.Message = "ပို့နေသည်အဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";
@@ -2163,18 +2163,18 @@ namespace QueenOfDreamer.API.Repos
                         return response;
                     }
                 }
-                else if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
+                else if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_ORDER && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2186,6 +2186,45 @@ namespace QueenOfDreamer.API.Repos
                     {
                         Console.WriteLine(ex.Message);
                     }
+                    #endregion
+
+                    #region MemberPoint (update by TYZ)
+                    var orderDetails = await _context.OrderDetail
+                    .Where(x => x.OrderId == request.OrderId)
+                    .ToListAsync();
+
+                    List<ReceivedMemberPointProductCategory> cateListPM = new List<ReceivedMemberPointProductCategory>();
+
+                    foreach (var item in orderDetails)
+                    {
+                        var cID = await _context.Product.Where(x => x.Id == item.ProductId).Select(x => x.ProductCategoryId).SingleOrDefaultAsync();
+
+                        var catePM = cateListPM.Where(x => x.ProductCategoryId == cID).SingleOrDefault();
+
+                        if (catePM == null)
+                        {
+                            var newCatePM = new ReceivedMemberPointProductCategory()
+                            {
+                                ProductCategoryId = cID,
+                                TotalAmount = item.Price * item.Qty
+                            };
+                            cateListPM.Add(newCatePM);
+                        }
+                        else
+                        {
+                            catePM.TotalAmount += item.Price * item.Qty;
+                        }
+                    }
+
+                    ReceivedMemberPointRequest recPMReq = new ReceivedMemberPointRequest()
+                    {
+                        UserId = userId,
+                        VoucherNo = objOrder.VoucherNo,
+                        ProductCategory = cateListPM,
+                        ApplicationConfigId = QueenOfDreamerConst.APPLICATION_CONFIG_ID
+                    };
+
+                    await _memberPointRepo.ReceivedMemberPoint(recPMReq, token);
                     #endregion
 
                     try
@@ -2212,7 +2251,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             bodyBuyers,
                                                                             userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);// true for sending noti to seller
 
                         response.Message = "ပို့ပြီးအဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";
@@ -2226,18 +2265,18 @@ namespace QueenOfDreamer.API.Repos
                         return response;
                     }
                 }
-                else if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING)
+                else if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENDING; // -ပို့နေသည်
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENDING; // -ပို့နေသည်
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_SENDING.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_SENDING.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2275,7 +2314,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             bodyBuyers,
                                                                             userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);// true for sending noti to seller
 
                         response.Message = "ပို့နေသည်အဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";
@@ -2289,18 +2328,18 @@ namespace QueenOfDreamer.API.Repos
                         return response;
                     }
                 }
-                else if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
+                else if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_TAKE && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2338,7 +2377,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             bodyBuyers,
                                                                             userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);// true for sending noti to seller
 
                         response.Message = "ပို့ပြီးအဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";
@@ -2352,18 +2391,18 @@ namespace QueenOfDreamer.API.Repos
                         return response;
                     }
                 }
-                else if (orderDetail.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
+                else if (objOrder.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENDING && request.OrderStatusId == QueenOfDreamerConst.ORDER_STATUS_SENT)
                 {
-                    orderDetail.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
-                    string voucherNo = orderDetail.VoucherNo;
-                    int userId = orderDetail.OrderUserId;
+                    objOrder.OrderStatusId = QueenOfDreamerConst.ORDER_STATUS_SENT; //ပို့ပြီး
+                    string voucherNo = objOrder.VoucherNo;
+                    int userId = objOrder.OrderUserId;
 
                     #region  Activity Log
                     try{
                         ActivityLog data=new ActivityLog(){
                             UserId=currentUserLogin,
                             ActivityTypeId=QueenOfDreamerConst.ACTIVITY_TYPE_ORDER_STATUS,
-                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+orderDetail.VoucherNo,
+                            Value=QueenOfDreamerConst.ORDER_STATUS_SENT.ToString()+"#"+objOrder.VoucherNo,
                             CreatedBy=currentUserLogin,
                             CreatedDate=DateTime.Now,
                             PlatformId=platform
@@ -2401,7 +2440,7 @@ namespace QueenOfDreamer.API.Repos
                                                                             bodyBuyers,
                                                                             userId,
                                                                             QueenOfDreamerConst.NOTI_REDIRECT_ACTION_ORDER_DETAIL,
-                                                                            orderDetail.Id,
+                                                                            objOrder.Id,
                                                                             notificationBuyer.Id,false);// true for sending noti to seller
 
                         response.Message = "ပို့ပြီးအဆင့်သို့ အောင်မြင်စွာ ပြောင်းပြီးပါပြီ။";

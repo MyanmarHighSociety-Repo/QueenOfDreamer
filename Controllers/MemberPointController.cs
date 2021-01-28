@@ -16,9 +16,6 @@ namespace QueenOfDreamer.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    [ServiceFilter(typeof(ActionActivity))]
-    [ServiceFilter(typeof(ActionActivityLog))]
 
     public class MemberPointController : ControllerBase
     {
@@ -31,6 +28,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetConfigMemberPoint")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetConfigMemberPoint()
         {
             try
@@ -51,6 +51,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetConfigMemberPointById")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetConfigMemberPointById(int id)
         {
             try
@@ -71,6 +74,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpPost("CreateProductReward")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> CreateProductReward(CreateProductRewardRequest request)
         {
             try
@@ -90,6 +96,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpPost("UpdateProductReward")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> UpdateProductReward(UpdateProductRewardRequest request)
         {
             try
@@ -112,7 +121,7 @@ namespace QueenOfDreamer.API.Controllers
         public async Task<IActionResult> GetRewardProduct([FromQuery]GetRewardProductRequest request)
         {
             try
-            {                
+            {
                 var response = await _memberPointRepo.GetRewardProduct(request);
                 // if (response == null || response.Count == 0)
                 // {
@@ -127,6 +136,9 @@ namespace QueenOfDreamer.API.Controllers
             }
         }
         [HttpGet("GetRewardProductById")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetRewardProductById([FromQuery]GetRewardProductByIdRequest request)
         {
             try
@@ -146,6 +158,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetRewardProductDetail")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetRewardProductDetail([FromQuery]GetRewardProductDetailRequest request)
         {
             try
@@ -167,6 +182,9 @@ namespace QueenOfDreamer.API.Controllers
         }
         
         [HttpGet("GetCartDetailForReward")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetCartDetailForReward(int productId,int skuId)
         {
             try
@@ -188,6 +206,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpDelete("DeleteProductReward")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> DeleteProductReward(int id)
         {
             try
@@ -208,6 +229,9 @@ namespace QueenOfDreamer.API.Controllers
 
 
         [HttpPost("RedeemOrder")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> RedeemOrder(RedeemOrderRequest request)
         {
             try
@@ -229,6 +253,9 @@ namespace QueenOfDreamer.API.Controllers
         }
         
         [HttpPost("RedeemOrderByKBZPay")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> RedeemOrderByKBZPay(RedeemOrderRequest request)
         {
             try
@@ -246,6 +273,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetProductCategoryForCreateConfigMemberPoint")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetProductCategoryForCreateConfigMemberPoint()
         {
             try
@@ -266,6 +296,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetOrderDetailForMemberPoint_MS")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetOrderDetailForMemberPoint_MS(string voucherNo)
         {
             try
@@ -285,6 +318,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetProductListForAddProductReward")]
+        [Authorize]
+        [ServiceFilter(typeof(ActionActivity))]
+        [ServiceFilter(typeof(ActionActivityLog))]
         public async Task<IActionResult> GetProductListForAddProductReward([FromQuery]GetProductListForAddProductRewardRequest request)
         {
             try

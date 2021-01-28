@@ -626,9 +626,9 @@ namespace QueenOfDreamer.API.Controllers
         }
 
         [HttpGet("GetBestSellingProduct")]
-        [Authorize]
-        [ServiceFilter(typeof(ActionActivity))]
-        [ServiceFilter(typeof(ActionActivityLog))]
+        //[Authorize]
+        //[ServiceFilter(typeof(ActionActivity))]
+        //[ServiceFilter(typeof(ActionActivityLog))]
 
         public async Task<IActionResult> GetBestSellingProduct([FromQuery]GetBestSellingProductRequest request)
         {

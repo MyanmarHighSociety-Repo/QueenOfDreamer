@@ -482,7 +482,7 @@ namespace QueenOfDreamer.API.Repos
         public async Task<ResponseStatus> DeleteProductReward(int id)
         {
             var response=new ResponseStatus();
-            var productReward=await _context.ProductReward.Where(x=>x.Id==id)
+            var productReward=await _context.ProductReward.Where(x=>x.ProductId==id)
             .SingleOrDefaultAsync();
             if(productReward!=null)
             {

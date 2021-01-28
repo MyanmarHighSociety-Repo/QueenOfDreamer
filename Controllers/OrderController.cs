@@ -674,7 +674,8 @@ namespace QueenOfDreamer.API.Controllers
             try
             {
                 var currentUserLogin = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                 var platform=3;
+                string token = Request.Headers["Authorization"];
+                var platform=3;
                 try{
                     #region Platform 
                     DeviceDetectorNET.DeviceDetector.SetVersionTruncation(VersionTruncation.VERSION_TRUNCATION_NONE);
@@ -702,7 +703,7 @@ namespace QueenOfDreamer.API.Controllers
                 var pathToFile = path
                     + Path.DirectorySeparatorChar.ToString()  
                     + "EmailTemplate.html";
-                var response = await _repo.UpdateOrderStatus(request, currentUserLogin,platform);
+                var response = await _repo.UpdateOrderStatus(request, currentUserLogin,platform, token);
                 
                 if (response.StatusCode != StatusCodes.Status200OK)
                 {

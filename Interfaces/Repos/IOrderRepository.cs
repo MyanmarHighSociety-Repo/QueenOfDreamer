@@ -29,7 +29,7 @@ namespace QueenOfDreamer.API.Interfaces.Repos
          Task<ResponseStatus> SeenNotification(SeenNotificationRequest request,int userId);
         Task<List<GetOrderListByProductResponse>> GetOrderListByProduct(GetOrderListByProductRequest request);
         Task<GetOrderListByProductIdResponse> GetOrderListByProductId(GetOrderListByProductIdRequest request);
-        Task<ResponseStatus> UpdateOrderStatus(UpdateOrderStatusRequest request, int currentUserLogin,int platform);
+        Task<ResponseStatus> UpdateOrderStatus(UpdateOrderStatusRequest request, int currentUserLogin,int platform, string token);
         Task<ResponseStatus> UpdatePaymentStatus(UpdatePaymentStatusRequest request, int currentUserLogin,string token,int platform);
         Task<ResponseStatus> UpdateDeliveryServiceStatus(UpdateDeliveryServiceStatusRequest request, int currentUserLogin,string token);
         Task<ResponseStatus> SellerOrderCancel(OrderCancelRequest request, int currentUserLogin,int platform);
